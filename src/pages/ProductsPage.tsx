@@ -29,6 +29,9 @@ export default function ProductsPage() {
   const API_URL = import.meta.env.VITE_API_URL;
   const { user } = useAuth(); // 👈 Get logged-in user
   const isSales = user?.role === "Sales"; // 👈 Check if role is "Sales"
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+
 
   useEffect(() => {
     loadCategories();
@@ -277,9 +280,9 @@ export default function ProductsPage() {
         <div className="flex items-center space-x-2">
           {!isSales && ( 
             <>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
+              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Import Products
               </Button>
               <Button onClick={handleCreateProduct}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -409,6 +412,51 @@ export default function ProductsPage() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Import Products Dialog */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Products</DialogTitle>
+            <DialogDescription>Upload an Excel file (.xlsx) to import products.</DialogDescription>
+          </DialogHeader>
+
+          <input
+            type="file"
+            accept=".xlsx"
+            onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            className="border p-2 rounded w-full"
+          />
+
+          <Button
+            className="mt-4"
+            disabled={!importFile}
+            onClick={async () => {
+              if (!importFile) return;
+
+              const formData = new FormData();
+              formData.append("file", importFile);
+
+              try {
+                const res = await fetch(`${API_URL}/products/import`, {
+                  method: "POST",
+                  body: formData,
+                });
+                if (!res.ok) throw new Error("Import failed");
+
+                toast.success("Products imported successfully!");
+                setIsImportOpen(false);
+                loadProducts(); // reload table
+              } catch (error) {
+                toast.error("Import failed");
+              }
+            }}
+          >
+            Upload & Import
+          </Button>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
