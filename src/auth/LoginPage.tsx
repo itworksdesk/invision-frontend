@@ -9,23 +9,30 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
       const res = await API.post("/auth/login", { email, password });
       login(res.data.access_token);
 
       if (res.data.must_change_password) {
-        // Force redirect to change password page
         navigate("/change-password", { replace: true });
       } else {
         navigate("/", { replace: true });
       }
     } catch (err: any) {
       setError("Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
+
 
 
   return (
@@ -63,6 +70,7 @@ const LoginPage = () => {
 
             <input
               type="email"
+              disabled={loading}
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,6 +80,7 @@ const LoginPage = () => {
 
             <input
               type="password"
+              disabled={loading}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -87,10 +96,42 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              className="w-full bg-[#2B92F3] text-white rounded-full py-3 font-medium hover:bg-blue-600 transition text-sm sm:text-base"
+              disabled={loading}
+              className={`w-full rounded-full py-3 font-medium transition text-sm sm:text-base flex items-center justify-center
+                ${loading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-[#2B92F3] hover:bg-blue-600 text-white"
+                }`}
             >
-              Login
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
+
           </form>
 
           <p className="text-center text-gray-600 mt-8 text-sm sm:text-base">

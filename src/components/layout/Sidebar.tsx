@@ -55,7 +55,7 @@ const menuItems: MenuItem[] = [
   { name: "Sales Persons", id: "sales_persons", href: "/sales-persons", icon: Users },
   { name: "User Management", id: "user_management", href: "/users", icon: UserCog },
   { name: "Reports", id: "reports", href: "/reports", icon: BarChart3 },
-  { name: "Settings", id: "settings", href: "/settings", icon: Settings }
+  // { name: "Settings", id: "settings", href: "/settings", icon: Settings }
 ];
 
 interface SidebarProps {
