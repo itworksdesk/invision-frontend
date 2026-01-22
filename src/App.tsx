@@ -53,7 +53,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <AuthProvider>
-          <BrowserRouter basename="/invision-frontend/"> 
+          <BrowserRouter basename="/"> 
             <Routes>
               {/* ---------- PUBLIC ROUTES ---------- */}
               <Route path="/register" element={<Register />} />
