@@ -31,6 +31,7 @@ export default function ProductsPage() {
   const isSales = user?.role === "Sales"; // 👈 Check if role is "Sales"
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
 
   useEffect(() => {
@@ -432,13 +433,14 @@ export default function ProductsPage() {
           <input
             type="file"
             accept=".xlsx"
+            disabled={isImporting}
             onChange={(e) => setImportFile(e.target.files?.[0] || null)}
             className="border p-2 rounded w-full"
           />
 
           <Button
             className="mt-4"
-            disabled={!importFile}
+            disabled={!importFile || isImporting}
             onClick={async () => {
               if (!importFile) return;
 
@@ -446,21 +448,53 @@ export default function ProductsPage() {
               formData.append("file", importFile);
 
               try {
+                setIsImporting(true); // 👈 START LOADING
+
                 const res = await fetch(`${API_URL}/products/import`, {
                   method: "POST",
                   body: formData,
                 });
+
                 if (!res.ok) throw new Error("Import failed");
 
                 toast.success("Products imported successfully!");
                 setIsImportOpen(false);
-                loadProducts(); // reload table
+                setImportFile(null);
+                loadProducts();
               } catch (error) {
                 toast.error("Import failed");
+              } finally {
+                setIsImporting(false); // 👈 STOP LOADING
               }
             }}
           >
-            Upload & Import
+            {isImporting ? (
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  ></path>
+                </svg>
+                Importing...
+              </div>
+            ) : (
+              "Upload & Import"
+            )}
           </Button>
         </DialogContent>
       </Dialog>
