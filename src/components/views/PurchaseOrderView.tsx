@@ -278,6 +278,8 @@ export default function PurchaseOrderView({
                   unitPrice: item.unitPrice,
                   taxRate: item.taxRate,
                   total: item.lineTotal,
+                  productCode: item.productCode,
+                  unitMeasure: item.unitMeasure,
                 })),
                 total: purchaseOrder.total,
                 subtotal: purchaseOrder.subtotal,

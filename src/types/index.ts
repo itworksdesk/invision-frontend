@@ -44,6 +44,7 @@ export interface LineItem {
   productName: string;
   description?: string | null;
   quantity: number;
+  unitMeasure?: string | null;
 
   // For standalone, backend will send these explicitly
   unitCost?: number | null;
@@ -151,6 +152,8 @@ export interface PurchaseOrderItem {
   unitPrice: number;
   taxRate: number;
   lineTotal: number;
+  productCode?: string;     // convenience from backend join
+  unitMeasure?: string | null; // convenience from backend join
 }
 
 
