@@ -179,6 +179,8 @@ const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps>(
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 border-gray-800">
+                  <th className="text-left py-3 px-2 text-sm font-bold text-gray-900 uppercase tracking-wider">No.</th>
+                  <th className="text-left py-3 px-2 text-sm font-bold text-gray-900 uppercase tracking-wider w-26">Prod Code</th>
                   <th className="text-left py-3 px-2 text-sm font-bold text-gray-900 uppercase tracking-wider">Item Description</th>
                   <th className="text-center py-3 px-2 text-sm font-bold text-gray-900 uppercase tracking-wider w-20">Qty</th>
                   <th className="text-right py-3 px-2 text-sm font-bold text-gray-900 uppercase tracking-wider w-32">Unit Price</th>
@@ -189,6 +191,8 @@ const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps>(
                 {invoice.items && invoice.items.length > 0 ? (
                   invoice.items.map((item: any, index: number) => (
                     <tr key={item.id || index} className="border-b border-gray-300">
+                      <td className="py-3 px-2 text-sm text-gray-700">{index + 1}</td>
+                      <td className="py-3 px-2 text-sm text-gray-700">{item.productCode}</td>
                       <td className="py-3 px-2 text-sm text-gray-700">{getItemDescription(item)}</td>
                       <td className="py-3 px-2 text-sm text-gray-700 text-center">{getItemQuantity(item)}</td>
                       <td className="py-3 px-2 text-sm text-gray-700 text-right">{formatCurrency(getItemUnitPrice(item))}</td>
@@ -197,7 +201,7 @@ const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps>(
                   ))
                 ) : (
                   <tr className="border-b border-gray-300">
-                    <td colSpan={4} className="py-3 px-2 text-sm text-gray-500 text-center">No items</td>
+                    <td colSpan={6} className="py-3 px-2 text-sm text-gray-500 text-center">No items</td>
                   </tr>
                 )}
                 {/* Add empty rows if items are less than 3 for consistent layout */}

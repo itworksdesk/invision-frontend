@@ -161,6 +161,12 @@ export default function ProductsPage() {
       sortable: true,
     },
     {
+      key: 'unit_measure',
+      label: 'Unit',
+      sortable: true,
+      render: (value: string) => value || '-',
+    },
+    {
       key: 'category_name',
       label: 'Category',
       sortable: true,

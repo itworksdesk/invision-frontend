@@ -16,6 +16,11 @@ interface ProductFormProps {
 
 export default function ProductsForm({ product, categories, onSuccess, onClose }: ProductFormProps) {
   const API_URL = import.meta.env.VITE_API_URL;
+  const UNIT_MEASURE_OPTIONS = ["PCS", "BOX", "MTR", "ROLL"];
+  
+  const [isCustomUnit, setIsCustomUnit] = useState(
+    !!product?.unit_measure && !["PCS", "BOX", "MTR", "ROLL"].includes(product?.unit_measure || "")
+  );
 
   const [formData, setFormData] = useState({
     name: product?.name || "",
@@ -27,6 +32,7 @@ export default function ProductsForm({ product, categories, onSuccess, onClose }
     cost_price: product?.cost_price?.toString() || "0",
     selling_price: product?.selling_price?.toString() || "0",
     image: product?.image || null,
+    unit_measure: product?.unit_measure || "",
   });
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(product?.image || null);
@@ -103,6 +109,7 @@ export default function ProductsForm({ product, categories, onSuccess, onClose }
         cost_price: Number(formData.cost_price),
         selling_price: Number(formData.selling_price),
         image: imageValue || null,
+        unit_measure: formData.unit_measure || null,
     };
 
     try {
@@ -179,6 +186,50 @@ export default function ProductsForm({ product, categories, onSuccess, onClose }
       <div>
         <Label htmlFor="selling_price">Selling Price</Label>
         <Input id="selling_price" name="selling_price" type="number" step="0.01" value={formData.selling_price} onChange={handleChange} />
+      </div>
+      
+      {/* Unit of Measure */}
+      <div>
+        <Label>Unit of Measure</Label>
+        <div className="flex gap-2">
+          <Select
+            value={isCustomUnit ? "__custom__" : (formData.unit_measure || "__none__")}
+            onValueChange={(value) => {
+              if (value === "__custom__") {
+                setIsCustomUnit(true);
+                setFormData(prev => ({ ...prev, unit_measure: "" }));
+              } else if (value === "__none__") {
+                setIsCustomUnit(false);
+                setFormData(prev => ({ ...prev, unit_measure: "" }));
+              } else {
+                setIsCustomUnit(false);
+                setFormData(prev => ({ ...prev, unit_measure: value }));
+              }
+            }}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Select unit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">None</SelectItem>
+              {UNIT_MEASURE_OPTIONS.map(u => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+              <SelectItem value="__custom__">Custom...</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {isCustomUnit && (
+            <Input
+              placeholder="e.g. SET, LITER, PAIR"
+              value={formData.unit_measure}
+              onChange={(e) =>
+                setFormData(prev => ({ ...prev, unit_measure: e.target.value }))
+              }
+              className="flex-1"
+            />
+          )}
+        </div>
       </div>
 
       {/* Image Upload */}

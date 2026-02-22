@@ -32,6 +32,7 @@ export interface Product extends Record<string, unknown>{
   cost_price: number;
   selling_price: number;
   image?: string;
+  unit_measure?: string | null;
 }
 
 export interface LineItem {
@@ -39,7 +40,7 @@ export interface LineItem {
   // 🔹 Either from a sales order item OR a standalone product
   soItemId?: string;       // if linked to sales order
   productId?: string;      // always present for standalone; also available via soItem.productId
-
+  productCode?: string;  // convenience from backend join
   productName: string;
   description?: string | null;
   quantity: number;

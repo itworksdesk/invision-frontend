@@ -48,6 +48,10 @@ export default function ProductView({ product, onClose, onEdit }: ProductViewPro
               <span className="ml-2">{product.sku}</span>
             </div>
             <div>
+              <span className="font-medium">Unit of Measure:</span>
+              <span className="ml-2">{product.unit_measure || '-'}</span>
+            </div>
+            <div>
               <span className="font-medium">Category:</span>
               <span className="ml-2">{product.category_name || 'Uncategorized'}</span>
             </div>
