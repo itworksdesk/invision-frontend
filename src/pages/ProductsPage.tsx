@@ -221,6 +221,7 @@ export default function ProductsPage() {
     if (isSales) return null; // 👈 Hide actions for Sales role
 
     return (
+      <div onClick={(e) => e.stopPropagation()}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="inline-flex justify-center items-center w-7 h-7 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-200 focus:outline-none">
@@ -255,6 +256,7 @@ export default function ProductsPage() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
     );
   };
 
