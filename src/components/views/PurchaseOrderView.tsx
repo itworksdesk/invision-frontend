@@ -42,7 +42,7 @@ export default function PurchaseOrderView({
         return 'primary';
       case 'partially_received':
         return 'secondary';
-      case 'fully_received':
+      case 'received':
         return 'success';
       case 'cancelled':
         return 'destructive';
@@ -93,9 +93,9 @@ export default function PurchaseOrderView({
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" /> Print
           </Button>
-          <Button variant="outline" size="sm" onClick={handleSendEmail}>
+          {/* <Button variant="outline" size="sm" onClick={handleSendEmail}>
             <Mail className="mr-2 h-4 w-4" /> Email
-          </Button>
+          </Button> */}
           {!isSales && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Edit className="mr-2 h-4 w-4" /> Edit
@@ -233,11 +233,14 @@ export default function PurchaseOrderView({
 
       {/* Close Button */}
       <div className="flex justify-end gap-2">
-        {!isSales && (
+      {!isSales && 
+        purchaseOrder.status !== 'received' &&
+        purchaseOrder.status !== 'cancelled' && (
           <Button onClick={onReceive}>
-              <Package className="mr-2 h-4 w-4" /> Receive Items
+            <Package className="mr-2 h-4 w-4" />
+            Receive Items
           </Button>
-        )}
+      )}
         <Button variant="outline" onClick={onClose}>
           <CircleX className="mr-2 h-4 w-4" />
           Close

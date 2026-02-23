@@ -176,7 +176,7 @@ export interface PurchaseOrder extends Record<string, unknown> {
   supplierEmail?: string;
   supplierAddress?: string;
   date: string;
-  status: 'draft' | 'sent' | 'partially_received' | 'fully_received' | 'cancelled';
+  status: 'draft' | 'sent' | 'partially_received' | 'received' | 'cancelled';
   items: PurchaseOrderItem[];
   subtotal: number;
   tax: number;
