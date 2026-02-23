@@ -251,6 +251,7 @@ export default function QuotationView({ quotation, onClose, onEdit, onAccept, on
                 customerAddress: quotation.customerAddress,
                 customerEmail: quotation.customerEmail,
                 notes: quotation.notes,
+                validUntil: quotation.validUntil,
               }}
               companyInfo={{
                 name: 'PENTAMAX ELECTRICAL SUPPLY',

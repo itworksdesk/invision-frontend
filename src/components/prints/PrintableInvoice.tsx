@@ -130,6 +130,9 @@ const PrintableInvoice = forwardRef<HTMLDivElement, PrintableInvoiceProps>(
                     {mode === "invoice" && invoice.dueDate && (
                       <div>Due Date: {formatDate(invoice.dueDate)}</div>
                     )}
+                    {mode === "quotation" && invoice.dueDate && (
+                      <div>Valid Until: {formatDate(invoice.dueDate)}</div>
+                    )}
                   </div>
                 </div>
                 {/* {invoice.status && (
