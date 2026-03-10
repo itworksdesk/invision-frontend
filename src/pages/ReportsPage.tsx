@@ -35,7 +35,7 @@ interface ReportData {
   // Extra for inventory
   top_selling?: { product_id: number; name: string; sku: string; total_sold: number }[];
   last_sold?: { product_id: number; name: string; sku: string; last_sold: string | null }[];
-
+  total_sales_persons?: number;
 }
 
 
@@ -173,6 +173,7 @@ const handleDownload = () => {
             <TabsTrigger value="inventory">Inventory Report</TabsTrigger>
             <TabsTrigger value="customers">Customer Report</TabsTrigger>
             <TabsTrigger value="suppliers">Supplier Report</TabsTrigger>
+            <TabsTrigger value="salespersons">Sales Person Report</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sales" className="space-y-4">
@@ -231,7 +232,7 @@ const handleDownload = () => {
                         </div>
                         <div className="p-4 border rounded">
                           <h3 className="text-sm font-medium">Inventory Value</h3>
-                          <p className="text-2xl font-bold">₱{reportData.total_inventory_value}</p>
+                          <p className="text-2xl font-bold">₱{Number(reportData.total_inventory_value).toLocaleString()}</p>
                         </div>
                       </div>
                       {/* Add table for inventory items */}
@@ -438,6 +439,74 @@ const handleDownload = () => {
                       </div>
                     </>
                   )
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="salespersons" className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle>Sales Person Overview</CardTitle></CardHeader>
+              <CardContent>
+                {loading ? <p>Loading sales person report...</p> : reportData && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                      <div className="p-4 border rounded">
+                        <h3 className="text-sm font-medium">Active Sales Persons</h3>
+                        <p className="text-2xl font-bold">{reportData.total_sales_persons}</p>
+                      </div>
+                      <div className="p-4 border rounded">
+                        <h3 className="text-sm font-medium">Total Revenue</h3>
+                        <p className="text-2xl font-bold">
+                          ₱{Number(reportData.total_revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded">
+                        <h3 className="text-sm font-medium">Total Profit</h3>
+                        <p className="text-2xl font-bold">
+                          ₱{Number(reportData.total_profit ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded">
+                        <h3 className="text-sm font-medium">Total Orders</h3>
+                        <p className="text-2xl font-bold">
+                          {reportData.items.reduce((sum: number, sp: any) => sum + sp.total_orders, 0)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                          <tr>
+                            {["Code", "Name", "Total Orders", "Total Revenue", "Total Profit", "Avg. Order Value"].map((h) => (
+                              <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {reportData.items.length > 0 ? (
+                            reportData.items.map((sp: any, index: number) => (
+                              <tr key={index}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sp.sales_person_code}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sp.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sp.total_orders}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{Number(sp.total_revenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{Number(sp.total_profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{Number(sp.average_order_value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                No sales person data available for this period.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
