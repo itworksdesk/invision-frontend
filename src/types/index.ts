@@ -301,6 +301,17 @@ export interface ActivePurchaseOrder {
 export interface PurchaseOrderHistoryItem {
   id: number;
   po_number: string;
-  date: string; // ISO date string
+  date: string;
   total: number;
+  items: {
+    id: number;
+    productId: number;
+    productName: string;
+    description?: string | null;
+    quantityOrdered: number;
+    unitPrice: number;
+    lineTotal: number;
+    unitMeasure?: string | null;
+    productCode?: string | null;
+  }[];
 }
