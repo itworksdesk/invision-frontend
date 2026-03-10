@@ -223,6 +223,8 @@ export interface Customer {
   average_order_value: number;
   has_unpaid_invoices: boolean;
   avatar: string;
+  sales_person_id?: number | null;
+  sales_person_name?: string | null;
 }
 
 export type SimpleSupplier = {

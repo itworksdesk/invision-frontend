@@ -15,8 +15,14 @@ import { useAuth } from "../auth/AuthContext";
 // ---------------- API Calls ----------------
 const API_URL = import.meta.env.VITE_API_URL;
 
+// AFTER
 const fetchCustomers = async (): Promise<Customer[]> => {
-  const res = await fetch(`${API_URL}/customers`);
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/customers`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
   if (!res.ok) throw new Error("Failed to fetch customers");
   return res.json();
 };
@@ -304,6 +310,10 @@ const CustomersPage = () => {
                         <p className="text-gray-600">{selectedCustomer.contact_person}</p>
                         <p className="text-gray-600">{selectedCustomer.email}</p>
                         <p className="text-gray-600">{selectedCustomer.phone}</p>
+                        {selectedCustomer.sales_person_name && (
+                          <p className="text-gray-600">Sales Person: {selectedCustomer.sales_person_name}</p>
+                        )}                        
+                        
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

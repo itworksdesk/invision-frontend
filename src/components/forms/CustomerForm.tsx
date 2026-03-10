@@ -1,6 +1,6 @@
 // src/components/forms/CustomerForm.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -25,9 +25,28 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
     address: customer?.address || "",
     contact_person: customer?.contact_person || "",
     status: customer?.status || "new_customer",
+    sales_person_id: customer?.sales_person_id?.toString() || "none",
+
   });
 
+  const [users, setUsers] = useState<{ id: number; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${API_URL}/users`);
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data);
+      } catch {
+        toast.error("Failed to load users");
+      }
+    };
+    fetchUsers();
+  }, []);
+
+
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -63,9 +82,15 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
       const bodyData: Record<string, any> = { ...formData };
       Object.keys(bodyData).forEach((key) => {
         if (bodyData[key] === "") {
-          bodyData[key] = null; // convert empty strings to null
+          bodyData[key] = null;
         }
       });
+      // Convert sales_person_id to integer if present
+      if (bodyData.sales_person_id === "none" || bodyData.sales_person_id === null) {
+        bodyData.sales_person_id = null;
+      } else {
+        bodyData.sales_person_id = parseInt(bodyData.sales_person_id);
+      }
 
       const response = await fetch(url, {
         method,
@@ -139,6 +164,26 @@ export default function CustomerForm({ customer, onSave, onCancel }: CustomerFor
           value={formData.contact_person}
           onChange={(e) => handleChange("contact_person", e.target.value)}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="sales_person_id">Assigned Sales Person</Label>
+        <Select
+          value={formData.sales_person_id}
+          onValueChange={(value) => handleChange("sales_person_id", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select sales person (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">— None —</SelectItem>
+            {users.map((u) => (
+              <SelectItem key={u.id} value={u.id.toString()}>
+                {u.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

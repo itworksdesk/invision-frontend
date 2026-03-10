@@ -70,6 +70,8 @@ const LoginPage = () => {
 
             <input
               type="email"
+              name="email"
+              autoComplete="email"
               disabled={loading}
               placeholder="Email"
               value={email}
@@ -80,6 +82,8 @@ const LoginPage = () => {
 
             <input
               type="password"
+              name="password"
+              autoComplete="current-password"
               disabled={loading}
               placeholder="Password"
               value={password}
