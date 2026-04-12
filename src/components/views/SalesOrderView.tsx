@@ -38,7 +38,11 @@ export default function SalesOrderView({
   const isSales = user?.role === "Sales"; // ✅ check role
   const [printTitle, setPrintTitle] = useState("SALES ORDER");
 
-
+  const handlePrintNow = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: printTitle,
+  });
+  
   const getInvoiceStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'not_invoiced':
@@ -392,7 +396,7 @@ export default function SalesOrderView({
           {printData && (
             <div>
               <div className="mb-4 flex justify-end space-x-2 no-print">
-                <Button onClick={() => handlePrint(salesOrder)}>
+                <Button onClick={handlePrintNow}>
                   <Printer className="mr-2 h-4 w-4" /> Print Receipt
                 </Button>
                 <Button variant="outline" onClick={() => setIsPrintDialogOpen(false)}>
