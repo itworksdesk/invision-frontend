@@ -89,7 +89,7 @@ export default function ReceiveItemDialog({
     if (value === "") {
       newItems[index].receivingNow = "";
     } else {
-      const num = Math.max(0, Math.min(parseInt(value) || 0, remaining));
+      const num = Math.max(0, parseInt(value) || 0);
       newItems[index].receivingNow = num.toString();
     }
 
@@ -233,11 +233,14 @@ export default function ReceiveItemDialog({
                       <Input
                         type="number"
                         min={0}
-                        max={remaining}
                         value={li.receivingNow}
                         onChange={(e) => handleQuantityChange(index, e.target.value)}
                         disabled={remaining === 0}
+                        className={parseInt(li.receivingNow) > remaining ? "border-yellow-500 focus-visible:ring-yellow-500" : ""}
                       />
+                      {parseInt(li.receivingNow) > remaining && (
+                        <p className="text-xs text-yellow-600 mt-1">Exceeds remaining quantity</p>
+                      )}
                     </div>
                   </div>
                 );
