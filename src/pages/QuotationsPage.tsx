@@ -188,8 +188,7 @@ export default function QuotationsPage() {
       const stockCheck = await checkStockAvailability(q);
       
       if (!stockCheck.isValid) {
-        toast.error(stockCheck.message || "Cannot accept quotation: Some quantities exceed available stock. Please edit the quotation first.");
-        return;
+        toast.warning(stockCheck.message || "Some quantities exceed available stock. Inventory may go negative.");
       }
       
       const updated = await acceptQuotation(q.id);

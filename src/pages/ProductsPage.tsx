@@ -118,7 +118,7 @@ export default function ProductsPage() {
   };
 
   const getStatusBadge = (quantity: number) => {
-    if (quantity === 0) {
+    if (quantity <= 0) {
       return <Badge variant="destructive" className="text-destructive">Out of Stock</Badge>;
     }
 
@@ -223,24 +223,24 @@ export default function ProductsPage() {
 
     return (
       <div onClick={(e) => e.stopPropagation()}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="inline-flex justify-center items-center w-7 h-7 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-200 focus:outline-none">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 12h.01M12 12h.01M19 12h.01" />
-          </svg>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleViewProduct(product)}>
-          <Eye className="mr-2 h-4 w-4" />
-          View
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        {/* <DropdownMenuItem onClick={() => handleAdjustStock(product, 10)}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="inline-flex justify-center items-center w-7 h-7 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-200 focus:outline-none">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 12h.01M12 12h.01M19 12h.01" />
+              </svg>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleViewProduct(product)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            {/* <DropdownMenuItem onClick={() => handleAdjustStock(product, 10)}>
           <Package className="mr-2 h-4 w-4" />
           Add Stock (+10)
         </DropdownMenuItem>
@@ -248,16 +248,16 @@ export default function ProductsPage() {
           <Package className="mr-2 h-4 w-4" />
           Reduce Stock (-10)
         </DropdownMenuItem> */}
-        <DropdownMenuItem
-          onClick={() => handleDeleteProduct(product)}
-          className="text-red-600"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-    </div>
+            <DropdownMenuItem
+              onClick={() => handleDeleteProduct(product)}
+              className="text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     );
   };
 
@@ -287,11 +287,11 @@ export default function ProductsPage() {
           <p className="text-muted-foreground">Manage your product inventory</p>
         </div>
         <div className="flex items-center space-x-2">
-          {!isSales && ( 
+          {!isSales && (
             <>
               <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Import Products
+                <Download className="mr-2 h-4 w-4" />
+                Import Products
               </Button>
               <Button onClick={handleCreateProduct}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -317,7 +317,7 @@ export default function ProductsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">
-              {products.filter(p => p.quantity < 10).length}
+              {products.filter(p => p.quantity > 0 && p.quantity < 10).length}
             </div>
           </CardContent>
         </Card>
@@ -327,7 +327,7 @@ export default function ProductsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {products.filter(p => p.quantity === 0).length}
+              {products.filter(p => p.quantity <= 0).length}
             </div>
           </CardContent>
         </Card>
@@ -378,7 +378,7 @@ export default function ProductsPage() {
             columns={columns}
             searchTerm={searchTerm}          // 👈 controlled search
             onRowClick={handleViewProduct}
-            // actions={getActionItems}
+          // actions={getActionItems}
           />
         </CardContent>
       </Card>
@@ -421,7 +421,7 @@ export default function ProductsPage() {
           )}
         </DialogContent>
       </Dialog>
-      
+
       {/* Import Products Dialog */}
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
         <DialogContent>

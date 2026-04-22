@@ -9,12 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Combobox } from '../ui/combobox';
 import { Plus, Trash2 } from 'lucide-react';
 import type { SalesOrder, Customer, Product, LineItem, SalesPerson, SimpleCustomer } from '../../types';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
+
 
 
 interface SalesOrderFormProps {
@@ -204,15 +199,7 @@ export default function SalesOrderForm({ salesOrder, onSave, onCancel }: SalesOr
     return { subtotal, tax, total };
   };
 
-  const hasInvalidQuantities = () => {
-    return items.some((item) => {
-      const selectedProduct = products.find((p) => p.id === item.productId);
-      if (!selectedProduct) return false;
-      if (item.quantity > selectedProduct.stock_info.on_hand) return true;
-      if (item.quantity > selectedProduct.stock_info.available) return true;
-      return false;
-    });
-  };
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -429,7 +416,7 @@ export default function SalesOrderForm({ salesOrder, onSave, onCancel }: SalesOr
                               const selectedProduct = products.find((p) => p.id === item.productId);
                               if (!selectedProduct) return "";
                               if (item.quantity > selectedProduct.stock_info.on_hand) {
-                                return "border-red-500";
+                                return "border-orange-500";
                               }
                               if (item.quantity > selectedProduct.stock_info.available) {
                                 return "border-orange-500";
@@ -446,8 +433,8 @@ export default function SalesOrderForm({ salesOrder, onSave, onCancel }: SalesOr
 
                               if (item.quantity > selectedProduct.stock_info.on_hand) {
                                 return (
-                                  <p className="text-xs text-red-600">
-                                    ❌ Only {selectedProduct.stock_info.on_hand} on hand.
+                                  <p className="text-xs text-orange-600">
+                                    ⚠️ Only {selectedProduct.stock_info.on_hand} on hand. Inventory will go negative.
                                   </p>
                                 );
                               }
@@ -562,23 +549,12 @@ export default function SalesOrderForm({ salesOrder, onSave, onCancel }: SalesOr
           Cancel
         </Button>
 
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <Button
-                  type="submit"
-                  disabled={saving || hasInvalidQuantities()}
-                >
-                  {saving ? "Saving..." : salesOrder ? "Update" : "Create"} Sales Order
-                </Button>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className={!hasInvalidQuantities() ? "hidden" : ""}>
-              <p>Fix invalid quantities before saving.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button
+          type="submit"
+          disabled={saving}
+        >
+          {saving ? "Saving..." : salesOrder ? "Update" : "Create"} Sales Order
+        </Button>
 
 
 
