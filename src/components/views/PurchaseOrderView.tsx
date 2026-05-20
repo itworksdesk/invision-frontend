@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge';
 import { Separator } from '../../components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Edit, Printer, Mail, Package, CircleX } from 'lucide-react';
+import { Edit, Printer, Mail, Package, CircleX, Undo2 } from 'lucide-react';
 import type { PurchaseOrder } from '../../types';
 import { useAuth } from "../../auth/AuthContext";
 import { useState, useRef } from 'react';
@@ -19,6 +19,7 @@ interface PurchaseOrderViewProps {
   onClose: () => void;
   onEdit: () => void;
   onReceive: () => void;
+  onUndo?: () => void;
 }
 
 export default function PurchaseOrderView({
@@ -26,6 +27,7 @@ export default function PurchaseOrderView({
   onClose,
   onEdit,
   onReceive,
+  onUndo,
 }: PurchaseOrderViewProps) {
   const { user } = useAuth(); // ✅ get current user
   const isSales = user?.role === "Sales"; // ✅ check role
@@ -96,7 +98,7 @@ export default function PurchaseOrderView({
           {/* <Button variant="outline" size="sm" onClick={handleSendEmail}>
             <Mail className="mr-2 h-4 w-4" /> Email
           </Button> */}
-          {!isSales && (
+          {!isSales && purchaseOrder.status !== 'received' && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>
@@ -233,14 +235,38 @@ export default function PurchaseOrderView({
 
       {/* Close Button */}
       <div className="flex justify-end gap-2">
-      {!isSales && 
-        purchaseOrder.status !== 'received' &&
-        purchaseOrder.status !== 'cancelled' && (
-          <Button onClick={onReceive}>
-            <Package className="mr-2 h-4 w-4" />
-            Receive Items
+        {!isSales && purchaseOrder.status === 'received' && (
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                const res = await fetch(
+                  `${import.meta.env.VITE_API_URL}/purchase-orders/${purchaseOrder.id}/undo-receipt`,
+                  { method: 'POST' }
+                );
+                if (!res.ok) {
+                  const err = await res.json();
+                  throw new Error(err.detail || 'Failed to undo receipt');
+                }
+                toast.success('Last receipt undone successfully');
+                onUndo?.();
+              } catch (err) {
+                toast.error((err as Error).message);
+              }
+            }}
+          >
+            <Undo2 className="mr-2 h-4 w-4" />
+            Undo Last Receipt
           </Button>
-      )}
+        )}
+        {!isSales &&
+          purchaseOrder.status !== 'received' &&
+          purchaseOrder.status !== 'cancelled' && (
+            <Button onClick={onReceive}>
+              <Package className="mr-2 h-4 w-4" />
+              Receive Items
+            </Button>
+        )}
         <Button variant="outline" onClick={onClose}>
           <CircleX className="mr-2 h-4 w-4" />
           Close

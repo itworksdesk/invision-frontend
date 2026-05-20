@@ -6,6 +6,7 @@ import {
   Trash2,
   Package,
   Search,
+  Undo2,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -221,12 +222,30 @@ export default function PurchaseOrdersPage() {
           <DropdownMenuItem onClick={() => handleViewPurchaseOrder(po)}>
             <Eye className="mr-2 h-4 w-4" /> View
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => { setSelectedPO(po); setShowForm(true); }}>
-            <Edit className="mr-2 h-4 w-4" /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => { setSelectedPO(po); setIsReceiveOpen(true); }}>
-            <Package className="mr-2 h-4 w-4" /> Receive Items
-          </DropdownMenuItem>
+          {po.status !== 'received' && (
+            <DropdownMenuItem onClick={() => { setSelectedPO(po); setShowForm(true); }}>
+              <Edit className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+          )}
+          {po.status !== 'received' && po.status !== 'cancelled' && (
+            <DropdownMenuItem onClick={() => { setSelectedPO(po); setIsReceiveOpen(true); }}>
+              <Package className="mr-2 h-4 w-4" /> Receive Items
+            </DropdownMenuItem>
+          )}
+          {po.status === 'received' && (
+            <DropdownMenuItem onClick={async () => {
+              try {
+                const res = await fetch(`${API_URL}/purchase-orders/${po.id}/undo-receipt`, { method: 'POST' });
+                if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+                await loadPurchaseOrders();
+                toast.success('Last receipt undone');
+              } catch (err) {
+                toast.error((err as Error).message);
+              }
+            }}>
+              <Undo2 className="mr-2 h-4 w-4" /> Undo Last Receipt
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => handleDeletePurchaseOrder(po)}
             className="text-red-600"
@@ -352,6 +371,10 @@ export default function PurchaseOrdersPage() {
                 setIsViewOpen(false);
                 setSelectedPO(selectedPurchaseOrder);
                 setIsReceiveOpen(true);
+              }}
+              onUndo={async () => {      
+                await loadPurchaseOrders();
+                setIsViewOpen(false);
               }}
             />
           )}
