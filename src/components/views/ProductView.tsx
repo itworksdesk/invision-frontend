@@ -14,7 +14,7 @@ interface ProductViewProps {
 
 export default function ProductView({ product, onClose, onEdit }: ProductViewProps) {
   const { user } = useAuth(); // ✅ get current user
-  const isSales = user?.role === "Sales"; // ✅ check role
+  const isSales = user?.role === "Sales" || user?.role === "Secretary"; // ✅ check role
 
   return (
     <div className="space-y-6">

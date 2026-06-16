@@ -28,7 +28,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const API_URL = import.meta.env.VITE_API_URL;
   const { user } = useAuth(); // 👈 Get logged-in user
-  const isSales = user?.role === "Sales"; // 👈 Check if role is "Sales"
+  const isReadOnly = user?.role === "Sales" || user?.role === "Secretary"; // 👈 Check if role is "Sales" or "Secretary"
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -199,7 +199,7 @@ export default function ProductsPage() {
     },
   ];
 
-  if (!isSales) {
+  if (!isReadOnly) {
     columns.push({
       key: 'actions',
       label: 'Actions',
@@ -219,7 +219,7 @@ export default function ProductsPage() {
   );
 
   const getActionItems = (product: Product) => {
-    if (isSales) return null; // 👈 Hide actions for Sales role
+    if (isReadOnly) return null; // 👈 Hide actions for read-only roles
 
     return (
       <div onClick={(e) => e.stopPropagation()}>
@@ -287,7 +287,7 @@ export default function ProductsPage() {
           <p className="text-muted-foreground">Manage your product inventory</p>
         </div>
         <div className="flex items-center space-x-2">
-          {!isSales && (
+          {!isReadOnly && (
             <>
               <Button variant="outline" onClick={() => setIsImportOpen(true)}>
                 <Download className="mr-2 h-4 w-4" />
@@ -413,7 +413,7 @@ export default function ProductsPage() {
             <ProductView
               product={selectedProduct}
               onClose={() => setIsViewOpen(false)}
-              onEdit={() => {
+              onEdit={isReadOnly ? undefined : () => {
                 setIsViewOpen(false);
                 handleEditProduct(selectedProduct);
               }}
