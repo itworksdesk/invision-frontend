@@ -91,6 +91,27 @@ async function fetchReport() {
   }
 }
 
+const INVENTORY_CSV_COLUMNS = [
+  "name",
+  "description",
+  "category",
+  "quantity",
+  "cost_price",
+  "selling_price",
+  "unit_measure",
+];
+
+// RFC 4180-compliant CSV escaping — no backslashes, ever.
+// Values containing a comma, double-quote, or newline are wrapped in double
+// quotes; any internal double-quote is doubled ("").
+const escapeCSV = (value: any): string => {
+  const str = value == null ? "" : String(value);
+  if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r")) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+};
+
 const handleDownload = () => {
   if (!reportData) {
     alert("No data available to download");
@@ -101,21 +122,25 @@ const handleDownload = () => {
   const fileName = `${activeTab}_report_${format(startDate, "yyyyMMdd")}_${format(endDate, "yyyyMMdd")}.csv`;
 
   if (reportData.items && reportData.items.length > 0) {
-    // Extract headers
-    const headers = Object.keys(reportData.items[0]);
+    // For inventory use the explicit column list; for other tabs keep all keys.
+    const headers =
+      activeTab === "inventory"
+        ? INVENTORY_CSV_COLUMNS
+        : Object.keys(reportData.items[0]);
+
     csvContent += headers.join(",") + "\n";
 
-    // Extract rows
     reportData.items.forEach((row: any) => {
-      const values = headers.map((h) => JSON.stringify(row[h] ?? "")); // escape commas/quotes
+      const values = headers.map((h) => escapeCSV(row[h] ?? ""));
       csvContent += values.join(",") + "\n";
     });
   } else {
     csvContent = "No data available for this report";
   }
 
-  // Download as CSV file
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  // \uFEFF is the UTF-8 BOM — without it Excel on Windows misreads
+  // multi-byte characters (e.g. ¼ appears as Â¼).
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.setAttribute("download", fileName);
