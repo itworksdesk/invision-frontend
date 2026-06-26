@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Plus, Search, Filter, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, AlertTriangle, Edit, Trash2, Calendar } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Customer, ActiveOrder, OrderHistoryItem } from "@/types";
 import CustomerForm from "@/components/forms/CustomerForm";
@@ -125,6 +125,34 @@ const CustomersPage = () => {
   const { user } = useAuth(); // 👈 Get logged-in user
   const isSales = user?.role === "Sales"; // 👈 Check if role is "Sales"
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+
+  // ---------------- Date Range ----------------
+  const formatDateInput = (d: Date) => d.toISOString().split("T")[0];
+  const todayStr = formatDateInput(new Date());
+  const oneMonthAgoStr = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return formatDateInput(d);
+  })();
+  const [startDate, setStartDate] = useState(oneMonthAgoStr);
+  const [endDate, setEndDate] = useState(todayStr);
+
+  // ---------------- Filtered Orders ----------------
+  const filteredActiveOrders = useMemo(
+    () => activeOrders.filter((o) => o.date >= startDate && o.date <= endDate),
+    [activeOrders, startDate, endDate]
+  );
+
+  const filteredOrderHistory = useMemo(
+    () => orderHistory.filter((o) => o.date >= startDate && o.date <= endDate),
+    [orderHistory, startDate, endDate]
+  );
+
+  // Remaining balance = sum of active (unpaid/partial) order totals within date range
+  const remainingBalance = useMemo(
+    () => filteredActiveOrders.reduce((sum, o) => sum + Number(o.total), 0),
+    [filteredActiveOrders]
+  );
 
   useEffect(() => {
     const loadCustomers = async () => {
@@ -352,9 +380,9 @@ const CustomersPage = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Average Order Value</p>
+                      <p className="text-sm text-gray-600">Remaining Balance</p>
                       <p className="text-xl font-semibold text-gray-900">
-                        ₱{Number(selectedCustomer.average_order_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ₱{remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div>
@@ -374,6 +402,47 @@ const CustomersPage = () => {
                   <AlertDescription>This customer has unpaid invoices.</AlertDescription>
                 </Alert>
               )}
+
+              {/* Date Range Picker */}
+              <Card className="mb-6">
+                <CardContent className="py-4 px-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span>Date Range</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="date"
+                        value={startDate}
+                        max={endDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-40 text-sm"
+                      />
+                      <span className="text-gray-500 text-sm">to</span>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        min={startDate}
+                        max={todayStr}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-40 text-sm"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-gray-500"
+                      onClick={() => {
+                        setStartDate(oneMonthAgoStr);
+                        setEndDate(todayStr);
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Active Orders */}
               <Card className="mb-6">
@@ -400,7 +469,7 @@ const CustomersPage = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {activeOrders.map((order) => {
+                        {filteredActiveOrders.map((order) => {
                           const status = deriveOrderStatus(order);
                           return (
                             <tr key={order.id} className="hover:bg-gray-50">
@@ -415,10 +484,10 @@ const CustomersPage = () => {
                             </tr>
                           );
                         })}
-                        {activeOrders.length === 0 && (
+                        {filteredActiveOrders.length === 0 && (
                           <tr>
                             <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                              No active orders for this customer
+                              No active orders in this date range
                             </td>
                           </tr>
                         )}
@@ -444,15 +513,15 @@ const CustomersPage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {orderHistory.length === 0 && (
+                        {filteredOrderHistory.length === 0 && (
                           <tr>
                             <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
-                              No past orders for this customer
+                              No past orders in this date range
                             </td>
                           </tr>
                         )}
 
-                        {orderHistory.map((order) => (
+                        {filteredOrderHistory.map((order) => (
                           <React.Fragment key={order.id}>
                             {/* Collapsible Header Row */}
                             <tr
