@@ -10,7 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Download } from "lucide-react";
+import { CalendarIcon, Download, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import MonthlySalesChart from "@/components/charts/MonthlySalesChart"; // Reuse if applicable
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
@@ -34,7 +35,7 @@ interface ReportData {
   // Add more fields as needed for customers and suppliers
   // Extra for inventory
   top_selling?: { product_id: number; name: string; sku: string; total_sold: number }[];
-  last_sold?: { product_id: number; name: string; sku: string; last_sold: string | null }[];
+  last_sold?: { product_id: number; product_code?: string | null; name: string; sku: string; last_sold: string | null; last_customer_name?: string | null }[];
   total_sales_persons?: number;
 }
 
@@ -47,6 +48,7 @@ export default function Reports() {
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastSoldSearch, setLastSoldSearch] = useState("");
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -293,20 +295,37 @@ const handleDownload = () => {
             </Card>
 
             {/* Last Sold Dates */}
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Last Sold Dates</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <CardTitle>Last Sold Dates</CardTitle>
+                  <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search by product ID or name..."
+                      value={lastSoldSearch}
+                      onChange={(e) => setLastSoldSearch(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <p>Loading last sold data...</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                  <div className="overflow-x-auto w-full">
+                    <table className="min-w-[700px] w-full divide-y divide-gray-200">
                       <thead>
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Product Code
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Product
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Last Customer
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Last Sold Date
@@ -320,20 +339,45 @@ const handleDownload = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {reportData?.last_sold?.length ? (
-                          reportData.last_sold.map((p, i) => {
+                        {(() => {
+                          const query = lastSoldSearch.trim().toLowerCase();
+                          const filtered = (reportData?.last_sold ?? []).filter((p) =>
+                            query === ""
+                              ? true
+                              : String(p.product_id).includes(query) ||
+                                (p.product_code ?? "").toLowerCase().includes(query) ||
+                                p.name.toLowerCase().includes(query)
+                          );
+
+                          if (!filtered.length) {
+                            return (
+                              <tr>
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                  {query ? "No products match your search." : "No last sold data available."}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return filtered.map((p, i) => {
                             const soldDate = p.last_sold ? new Date(p.last_sold) : null;
                             const daysAgo = soldDate ? differenceInDays(new Date(), soldDate) : null;
                             const status = !soldDate
                               ? "Inactive"
-                              : daysAgo <= 30
+                              : daysAgo! <= 30
                               ? "Active"
                               : "Inactive";
 
                             return (
                               <tr key={i}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                                  {p.product_code ?? "—"}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {p.name} ({p.sku})
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {p.last_customer_name ?? "—"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {soldDate ? soldDate.toLocaleDateString() : "Never Sold"}
@@ -352,14 +396,8 @@ const handleDownload = () => {
                                 </td>
                               </tr>
                             );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                              No last sold data available.
-                            </td>
-                          </tr>
-                        )}
+                          });
+                        })()}
                       </tbody>
                     </table>
                   </div>
