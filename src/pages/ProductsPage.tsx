@@ -27,7 +27,7 @@ export default function ProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const API_URL = import.meta.env.VITE_API_URL;
-  const { user } = useAuth(); // 👈 Get logged-in user
+  const { user, token } = useAuth();
   const isReadOnly = user?.role === "Sales" || user?.role === "Secretary"; // 👈 Check if role is "Sales" or "Secretary"
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -452,6 +452,9 @@ export default function ProductsPage() {
 
                 const res = await fetch(`${API_URL}/products/import`, {
                   method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
                   body: formData,
                 });
 
