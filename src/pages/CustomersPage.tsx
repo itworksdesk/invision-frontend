@@ -154,6 +154,22 @@ const CustomersPage = () => {
     [filteredActiveOrders]
   );
 
+  // Total orders = active + completed within date range
+  const rangedTotalOrders = useMemo(
+    () => filteredActiveOrders.length + filteredOrderHistory.length,
+    [filteredActiveOrders, filteredOrderHistory]
+  );
+
+  // Total spent = active order totals + completed order item totals within date range
+  const rangedTotalSpent = useMemo(() => {
+    const activeTotal = filteredActiveOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const historyTotal = filteredOrderHistory.reduce(
+      (sum, o) => sum + o.items.reduce((s, i) => s + i.total, 0),
+      0
+    );
+    return activeTotal + historyTotal;
+  }, [filteredActiveOrders, filteredOrderHistory]);
+
   useEffect(() => {
     const loadCustomers = async () => {
       try {
@@ -370,13 +386,13 @@ const CustomersPage = () => {
                     <div>
                       <p className="text-sm text-gray-600">Total Orders</p>
                       <p className="text-xl font-semibold text-gray-900">
-                        {selectedCustomer.total_orders}
+                        {rangedTotalOrders}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Total Spent</p>
                       <p className="text-xl font-semibold text-gray-900">
-                        ₱{Number(selectedCustomer.total_spent).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ₱{rangedTotalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div>
