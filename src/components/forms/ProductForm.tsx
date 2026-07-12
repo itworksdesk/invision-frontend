@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { Product, Category } from "@/types";
+// ⚠️ Adjust this path to wherever axiosClient.ts actually lives in your project
+// (e.g. "@/api/axiosClient", "@/lib/axiosClient", "@/services/axiosClient")
+import API from "@/api/axiosClient";
 
 interface ProductFormProps {
   product: Product | null;
@@ -58,13 +61,11 @@ export default function ProductsForm({ product, categories, onSuccess, onClose }
 
     try {
       setUploading(true);
-      const res = await fetch(`${API_URL}/upload-image`, {
-        method: "POST",
-        body: formDataUpload,
-      });
-
-      if (!res.ok) throw new Error("Image upload failed");
-      const data = await res.json();
+      // Use the shared axios client (not raw fetch) so the Authorization
+      // header gets attached by the request interceptor. This endpoint
+      // requires an Admin-role token on the backend.
+      const res = await API.post("/upload-image", formDataUpload);
+      const data = res.data;
 
       // Backend returns { image_path: "/uploads/images/..." }
       let imagePath = data.image_path;
@@ -113,23 +114,22 @@ export default function ProductsForm({ product, categories, onSuccess, onClose }
     };
 
     try {
-      const method = product ? "PUT" : "POST";
-      const url = product ? `${API_URL}/products/${product.id}` : `${API_URL}/products`;
-
-        const res = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
-
-      if (!res.ok) throw new Error("Failed to save product");
+      // Use the shared axios client (not raw fetch) so the Authorization
+      // header gets attached by the request interceptor. Creating/updating
+      // a product requires an Admin-role token on the backend.
+      if (product) {
+        await API.put(`/products/${product.id}`, payload);
+      } else {
+        await API.post("/products", payload);
+      }
 
       toast.success(product ? "Product updated" : "Product created");
       onSuccess();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Error saving product");
+      const message = err?.response?.data?.detail || "Error saving product";
+      toast.error(message);
     }
   };
 
