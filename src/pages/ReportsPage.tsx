@@ -10,11 +10,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Download, Search } from "lucide-react";
+import { CalendarIcon, Download, Search, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MonthlySalesChart from "@/components/charts/MonthlySalesChart"; // Reuse if applicable
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
+
+type LastSoldSortKey = "product" | "so_number" | "quantity" | "customer" | "last_shipped" | "status";
 
 interface ReportData {
   // Sales report fields
@@ -35,7 +37,16 @@ interface ReportData {
   // Add more fields as needed for customers and suppliers
   // Extra for inventory
   top_selling?: { product_id: number; name: string; sku: string; total_sold: number }[];
-  last_sold?: { product_id: number; product_code?: string | null; name: string; sku: string; last_sold: string | null; last_customer_name?: string | null }[];
+  last_sold?: {
+    product_id: number;
+    product_code?: string | null;
+    name: string;
+    sku: string;
+    last_sold: string | null;
+    last_customer_name?: string | null;
+    last_quantity?: number | null;
+    last_order_number?: string | null;
+  }[];
   total_sales_persons?: number;
 }
 
@@ -49,7 +60,30 @@ export default function Reports() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastSoldSearch, setLastSoldSearch] = useState("");
+  const [lastSoldSort, setLastSoldSort] = useState<{ key: LastSoldSortKey; direction: "asc" | "desc" } | null>(null);
   const BASE_URL = import.meta.env.VITE_API_URL;
+
+  const handleLastSoldSort = (key: LastSoldSortKey) => {
+    setLastSoldSort((prev) => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      // Dates and quantities are more useful sorted newest/highest first by default
+      const defaultDirection = key === "last_shipped" || key === "quantity" ? "desc" : "asc";
+      return { key, direction: defaultDirection };
+    });
+  };
+
+  const LastSoldSortIcon = ({ column }: { column: LastSoldSortKey }) => {
+    if (lastSoldSort?.key !== column) {
+      return <ChevronsUpDown className="h-3 w-3 text-gray-300" />;
+    }
+    return lastSoldSort.direction === "asc" ? (
+      <ArrowUp className="h-3 w-3 text-gray-700" />
+    ) : (
+      <ArrowDown className="h-3 w-3 text-gray-700" />
+    );
+  };
 
   useEffect(() => {
     fetchReport();
@@ -315,26 +349,62 @@ const handleDownload = () => {
                   <p>Loading last sold data...</p>
                 ) : (
                   <div className="overflow-x-auto w-full">
-                    <table className="min-w-[700px] w-full divide-y divide-gray-200">
+                    <table className="w-full divide-y divide-gray-200 text-sm">
                       <thead>
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Product Code
+                          <th
+                            onClick={() => handleLastSoldSort("product")}
+                            className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Product
+                              <LastSoldSortIcon column="product" />
+                            </span>
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Product
+                          <th
+                            onClick={() => handleLastSoldSort("so_number")}
+                            className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              SO Number
+                              <LastSoldSortIcon column="so_number" />
+                            </span>
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Last Customer
+                          <th
+                            onClick={() => handleLastSoldSort("quantity")}
+                            className="px-3 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center justify-end gap-1">
+                              Qty
+                              <LastSoldSortIcon column="quantity" />
+                            </span>
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Last Sold Date
+                          <th
+                            onClick={() => handleLastSoldSort("customer")}
+                            className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Customer
+                              <LastSoldSortIcon column="customer" />
+                            </span>
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Last Sold (Ago)
+                          <th
+                            onClick={() => handleLastSoldSort("last_shipped")}
+                            className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Last Shipped
+                              <LastSoldSortIcon column="last_shipped" />
+                            </span>
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
+                          <th
+                            onClick={() => handleLastSoldSort("status")}
+                            className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Status
+                              <LastSoldSortIcon column="status" />
+                            </span>
                           </th>
                         </tr>
                       </thead>
@@ -349,17 +419,9 @@ const handleDownload = () => {
                                 p.name.toLowerCase().includes(query)
                           );
 
-                          if (!filtered.length) {
-                            return (
-                              <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                  {query ? "No products match your search." : "No last sold data available."}
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          return filtered.map((p, i) => {
+                          // Compute the derived display values once so sorting and
+                          // rendering agree, instead of recomputing per-cell.
+                          const enriched = filtered.map((p) => {
                             const soldDate = p.last_sold ? new Date(p.last_sold) : null;
                             const daysAgo = soldDate ? differenceInDays(new Date(), soldDate) : null;
                             const status = !soldDate
@@ -367,25 +429,81 @@ const handleDownload = () => {
                               : daysAgo! <= 30
                               ? "Active"
                               : "Inactive";
+                            return { ...p, soldDate, daysAgo, status };
+                          });
+
+                          if (lastSoldSort) {
+                            const { key, direction } = lastSoldSort;
+                            const dir = direction === "asc" ? 1 : -1;
+                            enriched.sort((a, b) => {
+                              let cmp = 0;
+                              switch (key) {
+                                case "product":
+                                  cmp = a.name.localeCompare(b.name);
+                                  break;
+                                case "so_number":
+                                  cmp = (a.last_order_number ?? "").localeCompare(b.last_order_number ?? "");
+                                  break;
+                                case "quantity":
+                                  cmp = (a.last_quantity ?? -Infinity) - (b.last_quantity ?? -Infinity);
+                                  break;
+                                case "customer":
+                                  cmp = (a.last_customer_name ?? "").localeCompare(b.last_customer_name ?? "");
+                                  break;
+                                case "last_shipped":
+                                  cmp = (a.soldDate?.getTime() ?? -Infinity) - (b.soldDate?.getTime() ?? -Infinity);
+                                  break;
+                                case "status":
+                                  cmp = a.status.localeCompare(b.status);
+                                  break;
+                              }
+                              return cmp * dir;
+                            });
+                          }
+
+                          if (!enriched.length) {
+                            return (
+                              <tr>
+                                <td colSpan={6} className="px-3 py-4 text-center text-gray-500">
+                                  {query ? "No products match your search." : "No last shipped data available."}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return enriched.map((p, i) => {
+                            const { soldDate, status } = p;
 
                             return (
                               <tr key={i}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                                  {p.product_code ?? "—"}
+                                <td className="px-3 py-2.5 max-w-[220px]">
+                                  <div className="text-gray-900 truncate" title={`${p.name} (${p.sku})`}>
+                                    {p.name}
+                                  </div>
+                                  <div className="text-xs text-gray-400 font-mono">
+                                    {p.product_code ?? "—"}
+                                  </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {p.name} ({p.sku})
+                                <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 font-mono">
+                                  {p.last_order_number ?? "—"}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 py-2.5 whitespace-nowrap text-right text-gray-900">
+                                  {p.last_quantity ?? "—"}
+                                </td>
+                                <td className="px-3 py-2.5 max-w-[140px] truncate text-gray-900" title={p.last_customer_name ?? undefined}>
                                   {p.last_customer_name ?? "—"}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {soldDate ? soldDate.toLocaleDateString() : "Never Sold"}
+                                <td className="px-3 py-2.5 whitespace-nowrap">
+                                  <div className="text-gray-900">
+                                    {soldDate ? soldDate.toLocaleDateString() : "Never Shipped"}
+                                  </div>
+                                  {soldDate && (
+                                    <div className="text-xs text-gray-400">
+                                      {formatDistanceToNow(soldDate, { addSuffix: true })}
+                                    </div>
+                                  )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {soldDate ? formatDistanceToNow(soldDate, { addSuffix: true }) : "—"}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                                <td className="px-3 py-2.5 whitespace-nowrap font-semibold">
                                   <span
                                     className={
                                       status === "Active" ? "text-green-600" : "text-red-600"
